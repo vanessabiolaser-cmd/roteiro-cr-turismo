@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monte seu Roteiro — CR Turismo</title>
+<style>
+  :root {
+    --azul-af:#1A2E4A; --ouro:#C9A84C; --preto:#1A1A1A; --cinza-esc:#3D3D3D; --cinza-med:#6B6B6B;
+    --branco:#FFFFFF; --creme:#FDF8EE; --azul-escuro:#111E30; --ouro-claro:#DFC078;
+    --ouro-bg:#FBF4E3; --borda:#D6C99A; --alerta-bg:#FFF8E7; --alerta-borda:#D4A820;
+    --fonte-titulo:Georgia,'Times New Roman',serif;
+    --fonte-corpo:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--fonte-corpo);background:var(--creme);color:var(--preto);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+  /* ---------- HEADER / PROGRESSO ---------- */
+  .header{background:var(--azul-af);padding:14px 18px 12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.25);}
+  .header-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .header-titles{flex:1;min-width:0;}
+  .header-titulo{font-family:var(--fonte-titulo);font-size:14px;font-weight:700;color:var(--ouro-claro);line-height:1.2;letter-spacing:0.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .header-sub{font-size:10px;color:rgba(201,168,76,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
+  .btn-inicio-header{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--ouro-claro);font-size:11px;font-weight:700;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:var(--fonte-corpo);white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+  .btn-inicio-header:active{opacity:0.75;}
+  .progress-wrap{margin-top:10px;display:flex;align-items:center;gap:8px;}
+  .progress-steps{display:flex;gap:4px;flex:1;}
+  .step-dot{flex:1;height:3px;border-radius:2px;background:rgba(201,168,76,0.2);transition:background 0.3s;cursor:default;}
+  .step-dot.ativo{background:var(--ouro-claro);}
+  .step-dot.visitado{background:var(--ouro);cursor:pointer;}
+  .progress-label{font-size:10px;color:rgba(201,168,76,0.5);white-space:nowrap;}
+
+  .container{max-width:480px;margin:0 auto;padding:0 0 100px;}
+  .step{display:none;} .step.ativo{display:block;}
+  .step-header{padding:22px 18px 0;}
+  .step-num{font-size:10px;font-weight:800;color:var(--ouro);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:5px;}
+  .step-titulo{font-family:var(--fonte-titulo);font-size:22px;color:var(--azul-af);font-weight:700;line-height:1.25;margin-bottom:6px;}
+  .step-desc{font-size:13px;color:var(--cinza-esc);line-height:1.55;}
+
+  /* ---------- TELA INICIAL ---------- */
+  .tela-inicial{display:flex;flex-direction:column;min-height:100vh;}
+  .inicial-hero{background:linear-gradient(180deg,var(--azul-af),var(--azul-escuro));padding:52px 24px 34px;text-align:center;}
+  .inicial-titulo{font-family:var(--fonte-titulo);font-size:clamp(15px, 5.8vw, 21px);color:var(--ouro-claro);font-weight:700;line-height:1.3;margin-bottom:10px;white-space:nowrap;}
+  .inicial-frase{font-size:14px;color:rgba(255,255,255,0.85);line-height:1.6;max-width:320px;margin:0 auto;}
+  .inicial-linha{width:40px;height:2px;margin:20px auto 0;background:linear-gradient(90deg,transparent,var(--ouro),transparent);}
+  .inicial-corpo{padding:30px 20px;flex:1;}
+  .btn-iniciar{width:100%;padding:17px;border-radius:12px;border:none;background:var(--azul-af);color:var(--branco);font-size:15px;font-weight:800;cursor:pointer;font-family:var(--fonte-corpo);box-shadow:0 4px 14px rgba(26,46,74,0.25);-webkit-tap-highlight-color:transparent;}
+  .btn-iniciar:active{opacity:0.85;}
+  .inicial-rodape{text-align:center;margin-top:20px;font-size:11px;color:var(--cinza-med);line-height:1.6;}
+
+  /* ---------- CARDS DE PERFIL (ESCOLHA) ---------- */
+  .perfil-card{background:var(--branco);border-radius:16px;margin:14px 16px 0;border:2px solid var(--borda);overflow:hidden;transition:all 0.2s;box-shadow:0 1px 6px rgba(26,46,74,0.08);}
+  .perfil-card.selecionado{border-color:var(--azul-af);box-shadow:0 4px 16px rgba(26,46,74,0.18);}
+  .perfil-card.indisponivel{opacity:0.55;}
+
+  .midia-slot{position:relative;width:100%;height:150px;background:var(--ouro-bg);display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--borda);}
+  .midia-slot img{width:100%;height:100%;object-fit:cover;}
+  .midia-placeholder{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--cinza-med);font-size:11px;font-weight:700;text-align:center;padding:10px;}
+  .midia-placeholder-icone{font-size:22px;}
+  .midia-botoes{position:absolute;bottom:8px;right:8px;display:flex;gap:6px;}
+  .midia-btn{background:rgba(26,46,74,0.85);color:var(--ouro-claro);border:none;font-size:11px;font-weight:700;padding:6px 10px;border-radius:20px;cursor:pointer;font-family:var(--fonte-corpo);-webkit-tap-highlight-color:transparent;}
+  .midia-btn:active{opacity:0.8;}
+  .video-link-tag{position:absolute;top:8px;left:8px;background:rgba(26,46,74,0.85);color:var(--ouro-claro);font-size:11px;font-weight:700;padding:6px 10px;border-radius:20px;text-decoration:none;display:none;align-items:center;gap:5px;}
+  .video-link-tag.ativo{display:inline-flex;}
+
+  /* ---------- CARROSSEL DE FOTOS (perfis e extensões) ---------- */
+  .carrossel{position:relative;width:100%;height:170px;background:var(--ouro-bg);overflow:hidden;border-bottom:1px solid var(--borda);}
+  .carrossel-trilho{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .carrossel-trilho::-webkit-scrollbar{display:none;}
+  .carrossel-slide{flex:0 0 100%;height:100%;scroll-snap-align:center;position:relative;display:flex;align-items:center;justify-content:center;}
+  .carrossel-slide img{width:100%;height:100%;object-fit:cover;}
+  .carrossel-placeholder{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--cinza-med);font-size:11px;font-weight:700;text-align:center;padding:10px;}
+  .carrossel-placeholder-icone{font-size:20px;}
+  .carrossel-add-btn{background:rgba(26,46,74,0.85);color:var(--ouro-claro);border:none;font-size:10px;font-weight:700;padding:5px 9px;border-radius:16px;cursor:pointer;font-family:var(--fonte-corpo);margin-top:4px;-webkit-tap-highlight-color:transparent;}
+  .carrossel-dica{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:9.5px;color:rgba(26,46,74,0.55);font-weight:700;letter-spacing:0.03em;pointer-events:none;}
+  .carrossel-dots{position:absolute;bottom:22px;left:0;right:0;display:flex;justify-content:center;gap:5px;}
+  .carrossel-dot{width:6px;height:6px;border-radius:50%;background:rgba(26,46,74,0.25);}
+  .carrossel-dot.ativo{background:var(--azul-af);}
+  .carrossel-video-btn{display:none;} /* obsoleto — vídeo agora fica fora do carrossel */
+
+  .perfil-corpo{padding:16px;}
+  .perfil-nome{font-family:var(--fonte-titulo);font-size:17px;font-weight:700;color:var(--azul-af);margin-bottom:3px;}
+  .perfil-apelido{font-size:12px;font-style:italic;color:var(--cinza-med);margin-bottom:10px;}
+  .perfil-categoria{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;background:var(--azul-af);color:var(--ouro-claro);padding:4px 10px;border-radius:20px;margin-bottom:12px;}
+
+  .btn-ler-mais{width:100%;padding:11px;border-radius:10px;border:1.5px dashed var(--borda);background:transparent;color:var(--azul-af);font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--fonte-corpo);-webkit-tap-highlight-color:transparent;margin-bottom:10px;text-align:center;}
+  .descricao-completa{display:none;font-size:13px;line-height:1.65;color:var(--cinza-esc);background:var(--ouro-bg);border-radius:10px;padding:13px;margin-bottom:12px;}
+  .descricao-completa.aberta{display:block;}
+  .descricao-completa strong{color:var(--azul-af);}
+  .perfil-hotel{font-size:12px;color:var(--cinza-esc);background:var(--ouro-bg);border-radius:8px;padding:8px 10px;margin-bottom:12px;}
+  .perfil-hotel strong{color:var(--azul-af);}
+
+  .btn-selecionar{width:100%;padding:13px;border-radius:10px;border:1.5px solid var(--azul-af);background:var(--branco);color:var(--azul-af);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--fonte-corpo);-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.15s;}
+  .btn-selecionar.marcado{background:var(--azul-af);color:var(--branco);}
+  .btn-selecionar .check-circ{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .btn-selecionar .check-circ svg{display:none;width:10px;height:8px;}
+  .btn-selecionar.marcado .check-circ{background:var(--ouro);border-color:var(--ouro);}
+  .btn-selecionar.marcado .check-circ svg{display:block;}
+
+  .btn-em-breve{width:100%;padding:13px;border-radius:10px;border:1.5px dashed var(--borda);background:transparent;color:var(--cinza-med);font-size:12px;font-weight:700;font-family:var(--fonte-corpo);text-align:center;}
+
+  .alerta-selecao{text-align:center;font-size:12px;color:#8B1A1A;margin:12px 16px 0;display:none;}
+  .alerta-selecao.visivel{display:block;}
+
+  /* ---------- DIAS EXPANSÍVEIS ---------- */
+  .dia-card{background:var(--branco);border-radius:14px;margin:12px 16px 0;border:1.5px solid var(--borda);overflow:hidden;box-shadow:0 1px 6px rgba(26,46,74,0.06);}
+  .dia-cabecalho{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .dia-numero{font-family:var(--fonte-titulo);font-size:20px;font-weight:700;color:var(--ouro);flex-shrink:0;width:34px;text-align:center;}
+  .dia-titulos{flex:1;min-width:0;}
+  .dia-nome{font-size:14px;font-weight:700;color:var(--azul-af);}
+  .dia-resumo{font-size:11.5px;color:var(--cinza-med);margin-top:2px;line-height:1.4;}
+  .dia-seta{font-size:12px;color:var(--ouro);transition:transform 0.2s;flex-shrink:0;}
+  .dia-card.aberto .dia-seta{transform:rotate(180deg);}
+  .dia-detalhe{display:none;padding:0 16px 16px;}
+  .dia-card.aberto .dia-detalhe{display:block;}
+  .dia-lista{font-size:13px;line-height:1.7;color:var(--cinza-esc);padding-left:16px;margin-bottom:10px;}
+  .dia-lista li{margin-bottom:5px;}
+
+  .toque-cr{background:var(--ouro-bg);border:1.5px solid var(--ouro);border-radius:10px;padding:12px 13px;margin-top:8px;}
+  .toque-cr-label{font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--azul-af);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+  .toque-cr-texto{font-size:12.5px;line-height:1.6;color:var(--cinza-esc);}
+
+  .midia-slot-mini{position:relative;width:100%;height:110px;background:var(--ouro-bg);border-radius:10px;margin-top:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px dashed var(--borda);}
+  .midia-slot-mini img{width:100%;height:100%;object-fit:cover;}
+  .midia-slot-mini .midia-botoes{bottom:6px;right:6px;}
+
+  /* ---------- EXTENSÕES (CHIPS) ---------- */
+  .chip-card{background:var(--branco);border:1.5px solid var(--borda);border-radius:12px;margin:0 16px 10px;overflow:hidden;}
+  .chip-topo{padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .chip-card.marcado .chip-topo{background:var(--ouro-bg);}
+  .chip-card.marcado{border-color:var(--azul-af);}
+  .chip-info{flex:1;min-width:0;}
+  .chip-nome{font-size:13.5px;font-weight:700;color:var(--azul-af);}
+  .chip-desc{font-size:11.5px;color:var(--cinza-med);margin-top:2px;line-height:1.4;}
+  .chip-check{width:24px;height:24px;border-radius:6px;border:2px solid var(--ouro);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--branco);}
+  .chip-card.marcado .chip-check{background:var(--ouro);}
+  .chip-check svg{display:none;} .chip-card.marcado .chip-check svg{display:block;}
+  .chip-detalhes-toggle{padding:0 14px 12px;}
+  .chip-detalhes-toggle button{background:none;border:none;color:var(--azul-af);font-size:11.5px;font-weight:700;text-decoration:underline;cursor:pointer;font-family:var(--fonte-corpo);}
+  .chip-detalhes{display:none;padding:0 14px 14px;font-size:12.5px;line-height:1.65;color:var(--cinza-esc);}
+  .chip-detalhes.aberto{display:block;}
+  .chip-detalhes strong{color:var(--azul-af);}
+
+  /* ---------- CAMADA OPERACIONAL (ESCONDIDA) ---------- */
+  .oper-toggle{margin:18px 16px 0;text-align:center;}
+  .oper-toggle button{background:none;border:none;color:var(--cinza-med);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;font-family:var(--fonte-corpo);}
+  .oper-caixa{display:none;margin:10px 16px 0;background:var(--ouro-bg);border:1px solid var(--borda);border-radius:10px;padding:14px;font-size:12px;line-height:1.7;color:var(--cinza-esc);}
+  .oper-caixa.ativo{display:block;}
+  .oper-caixa strong{color:var(--azul-af);}
+
+  /* ---------- BOTÕES DE NAVEGAÇÃO ---------- */
+  .nav-botoes{display:flex;gap:10px;padding:22px 16px 0;}
+  .btn-primario{flex:1;padding:16px;border-radius:12px;border:none;background:var(--azul-af);color:var(--branco);font-size:14px;font-weight:800;cursor:pointer;font-family:var(--fonte-corpo);box-shadow:0 4px 14px rgba(26,46,74,0.25);-webkit-tap-highlight-color:transparent;}
+  .btn-primario:active{opacity:0.85;}
+  .btn-secundario{padding:16px 18px;border-radius:12px;border:1.5px solid var(--ouro);background:var(--branco);color:var(--azul-af);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--fonte-corpo);-webkit-tap-highlight-color:transparent;}
+
+  /* ---------- RESUMO FINAL ---------- */
+  .resumo-topo{background:var(--azul-af);padding:26px 20px 22px;text-align:center;}
+  .resumo-topo-sub{font-size:11px;color:rgba(201,168,76,0.55);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;}
+  .resumo-topo-titulo{font-family:var(--fonte-titulo);font-size:21px;color:var(--ouro-claro);font-weight:700;}
+  .resumo-topo-linha{width:40px;height:2px;background:linear-gradient(90deg,transparent,var(--ouro),transparent);margin:12px auto 0;}
+  .resumo-secao{padding:16px 18px;border-bottom:1px solid var(--borda);background:var(--branco);}
+  .resumo-secao-header{background:var(--azul-af);color:var(--branco);margin:-16px -18px 14px;padding:8px 18px;font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;}
+  .resumo-perfil-nome{font-family:var(--fonte-titulo);font-size:16px;font-weight:700;color:var(--azul-af);margin-bottom:8px;}
+  .resumo-dia{margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed var(--borda);}
+  .resumo-dia:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .resumo-dia-nome{font-size:13.5px;font-weight:700;color:var(--azul-af);margin-bottom:4px;}
+  .resumo-dia-texto{font-size:12.5px;line-height:1.6;color:var(--cinza-esc);}
+  .resumo-thumb{width:100%;height:100px;object-fit:cover;border-radius:8px;margin-top:8px;}
+  .resumo-extensao-item{font-size:13px;color:var(--cinza-esc);padding:6px 0;border-bottom:1px solid var(--borda);display:flex;align-items:center;gap:8px;}
+  .resumo-extensao-item:last-child{border-bottom:none;}
+  .resumo-extensao-item::before{content:'◆';color:var(--ouro);font-size:9px;}
+  .resumo-rodape{background:var(--azul-af);padding:20px;text-align:center;}
+  .resumo-rodape-texto{font-size:11px;color:rgba(201,168,76,0.6);line-height:1.7;}
+
+  .hidden{display:none!important;}
+
+  /* ---------- LIGHTBOX (foto ampliada em tela cheia, com zoom por gesto) ---------- */
+  .lightbox{position:fixed;inset:0;background:rgba(17,30,48,0.96);z-index:1000;display:none;align-items:center;justify-content:center;touch-action:none;}
+  .lightbox.ativo{display:flex;}
+  .lightbox img{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;user-select:none;-webkit-user-select:none;transform-origin:center center;}
+  .lightbox-fechar{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:1001;}
+  .lightbox-dica{position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.05em;}
+
+  /* ---------- BOTÃO DE VÍDEO SEPARADO (abaixo da badge, não sobre a foto) ---------- */
+  .video-btn-separado{display:inline-flex;align-items:center;gap:6px;background:var(--azul-af);color:var(--ouro-claro);border:none;font-size:11.5px;font-weight:700;padding:7px 13px;border-radius:20px;cursor:pointer;font-family:var(--fonte-corpo);-webkit-tap-highlight-color:transparent;margin-left:8px;text-decoration:none;vertical-align:middle;}
+  .video-btn-separado:active{opacity:0.8;}
+
+  /* ============================================================
+     TELAS DA "ÁREA DO IGOR" (senha + jornada completa somente-leitura)
+     Aparecem só quando o link tem ?id=... — o mesmo arquivo cuida
+     dos dois papéis (configurador do turista / jornada do Igor).
+     ============================================================ */
+  .tela-senha{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+  .senha-titulo{font-family:var(--fonte-titulo);font-size:20px;color:var(--azul-af);font-weight:700;margin-bottom:6px;text-align:center;}
+  .senha-sub{font-size:13px;color:var(--cinza-med);margin-bottom:24px;text-align:center;}
+  .senha-input{width:100%;max-width:280px;border:1.5px solid var(--borda);border-radius:10px;padding:14px;font-size:16px;text-align:center;font-family:var(--fonte-corpo);outline:none;-webkit-appearance:none;}
+  .senha-input:focus{border-color:var(--ouro);box-shadow:0 0 0 3px rgba(201,168,76,0.18);}
+  .senha-btn{width:100%;max-width:280px;margin-top:14px;padding:14px;border-radius:10px;border:1.5px solid var(--ouro);background:var(--azul-af);color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--fonte-corpo);}
+  .senha-btn:active{opacity:0.85;}
+  .senha-erro{color:#8B1A1A;font-size:12px;margin-top:10px;display:none;text-align:center;}
+  .senha-carregando{font-size:13px;color:var(--cinza-med);margin-top:14px;display:none;text-align:center;}
+
+  .tela-vazia{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+  .tela-vazia-titulo{font-family:var(--fonte-titulo);font-size:18px;color:var(--azul-af);font-weight:700;margin-bottom:8px;}
+  .tela-vazia-texto{font-size:13px;color:var(--cinza-med);line-height:1.6;max-width:300px;}
+
+  .jornada-view{display:none;}
+  .jornada-view.ativa{display:block;}
+  .jornada-topo{background:linear-gradient(180deg,var(--azul-af),var(--azul-escuro));padding:40px 24px 30px;text-align:center;}
+  .jornada-topo-sub{font-size:11px;color:rgba(201,168,76,0.6);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;}
+  .jornada-topo-titulo{font-family:var(--fonte-titulo);font-size:23px;color:var(--ouro-claro);font-weight:700;line-height:1.3;}
+  .jornada-topo-linha{width:40px;height:2px;margin:16px auto 0;background:linear-gradient(90deg,transparent,var(--ouro),transparent);}
+
+  /* Card de perfil somente-leitura na jornada (sem botão de seleção) */
+  .jn-perfil-card{background:var(--branco);border-radius:16px;margin:16px 16px 0;border:2px solid var(--borda);overflow:hidden;box-shadow:0 1px 6px rgba(26,46,74,0.08);}
+  .jn-perfil-corpo{padding:18px;}
+  .jn-perfil-hotel{font-size:12.5px;color:var(--cinza-esc);}
+  .jn-perfil-hotel strong{color:var(--azul-af);}
+  .jn-secao-titulo{margin:24px 16px 4px;font-family:var(--fonte-titulo);font-size:16px;color:var(--azul-af);font-weight:700;}
+  .jn-ext-card{background:var(--branco);border:1.5px solid var(--borda);border-radius:12px;margin:12px 16px 0;overflow:hidden;}
+  .jn-rodape{margin:26px 16px 0;text-align:center;font-size:11px;color:var(--cinza-med);line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- ============ LIGHTBOX — foto ampliada (compartilhado por todo o app) ============ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-fechar" onclick="fecharLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-dica">toque fora ou no X para fechar · belisque para dar zoom</div>
+</div>
+
+<!-- ============ TELA INICIAL ============ -->
+<div class="tela-inicial" id="telaInicial">
+  <div class="inicial-hero">
+    <div class="inicial-titulo">Bem-vindo ao Rio de Janeiro</div>
+    <div class="inicial-frase">Uma viagem feita para ser vivida, não apenas visitada. Monte o roteiro que combina com a sua viagem — em poucos toques.</div>
+    <div class="inicial-linha"></div>
+  </div>
+  <div class="inicial-corpo">
+    <button class="btn-iniciar" onclick="mostrarStep(1)">Começar →</button>
+    <div class="inicial-rodape">CR Turismo · Travel Solutions<br>Roteiros privados e exclusivos</div>
+  </div>
+</div>
+
+<!-- ============ ÁREA DO IGOR (senha + jornada) — só aparece com ?id=... na URL ============ -->
+<div class="tela-senha hidden" id="telaSenha">
+  <div class="senha-titulo">Área da Equipe</div>
+  <div class="senha-sub">Digite a senha para acessar a jornada completa</div>
+  <input type="password" class="senha-input" id="senhaInput" placeholder="Senha" inputmode="numeric">
+  <button class="senha-btn" id="btnEntrarSenha">Entrar</button>
+  <div class="senha-erro" id="senhaErro">Senha incorreta.</div>
+  <div class="senha-carregando" id="senhaCarregando">Carregando jornada...</div>
+</div>
+
+<div class="tela-vazia hidden" id="telaVazia">
+  <div class="tela-vazia-titulo">Nenhuma jornada encontrada</div>
+  <div class="tela-vazia-texto">Este link precisa vir de um roteiro montado pelo cliente. Verifique se o link está completo.</div>
+</div>
+
+<div class="jornada-view" id="telaJornadaView">
+  <div class="jornada-topo">
+    <div class="jornada-topo-sub">Jornada completa do cliente</div>
+    <div class="jornada-topo-titulo">Rio de Janeiro<br><span style="font-size:16px;">CR Turismo</span></div>
+    <div class="jornada-topo-linha"></div>
+  </div>
+  <div class="container" id="jornadaConteudoView"></div>
+</div>
+
+<!-- ============ CONFIGURADOR (o que o turista usa) ============ -->
+<div id="areaConfigurador">
+
+<!-- ============ HEADER + PROGRESSO (aparece a partir do step 1) ============ -->
+<div class="header hidden" id="headerTopo">
+  <div class="header-top">
+    <div class="header-titles">
+      <div class="header-titulo">Monte seu Roteiro</div>
+      <div class="header-sub">CR Turismo</div>
+    </div>
+    <button class="btn-inicio-header" onclick="mostrarStep(0)">Início</button>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-steps" id="progressSteps"></div>
+    <div class="progress-label" id="progressLabel">1/4</div>
+  </div>
+</div>
+
+<div class="container">
+
+
+  <!-- ============ STEP 1 — ESCOLHA DE PERFIL ============ -->
+  <div class="step" id="step1">
+    <div class="step-header">
+      <div class="step-num">Passo 1 de 4</div>
+      <div class="step-titulo">Qual Rio combina com você?</div>
+      <div class="step-desc">Escolha um ou mais estilos de viagem. Você pode combinar mais de um.</div>
+    </div>
+
+    <!-- CARD: NATUREZA (completo) -->
+    <div class="perfil-card" id="perfilCard_natureza">
+      <div class="carrossel" id="carrossel_natureza_capa" data-carrossel="natureza_capa"></div>
+      <div class="perfil-corpo">
+        <div class="perfil-categoria">Luxo Silencioso</div>
+        <div id="videoSlot_natureza_capa" style="margin-bottom:10px;"></div>
+        <div class="perfil-nome">Natureza Exclusiva + Cultura</div>
+        <div class="perfil-apelido">"O Rio que respira"</div>
+
+        <button class="btn-ler-mais" onclick="toggleDescricao('natureza', this)">Ler descrição completa ▾</button>
+        <div class="descricao-completa" id="descricao_natureza">
+          <p><strong>Perfil ideal:</strong> famílias ativas e casais que querem mais do que cartão-postal. Para quem já conhece o Caribe e a Europa, e busca algo autêntico, em plena natureza urbana, guiado por alguém que entende sua cultura.</p><br>
+          <p>Em cinco dias, sua família vai viver o Rio de verdade: a maior selva urbana do mundo, mirantes que só quem conhece o caminho alcança, e o Cristo Redentor recém-aberto — quase vazio, com a primeira luz da manhã, sem filas e sem multidões.</p>
+        </div>
+
+        <div class="perfil-hotel"><strong>Hotel sugerido:</strong> Emiliano Copacabana ou Fairmont Rio</div>
+        <button class="btn-selecionar" id="btnPerfil_natureza" onclick="togglePerfil('natureza')">
+          <span class="check-circ"><svg viewBox="0 0 12 9"><polyline points="1,5 4,8 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>
+          <span>Escolher esta experiência</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CARD: GASTRONOMIA (placeholder — em breve) -->
+    <div class="perfil-card indisponivel">
+      <div class="midia-slot">
+        <div class="midia-placeholder">
+          <div class="midia-placeholder-icone">🍽️</div>
+          <div>Em breve</div>
+        </div>
+      </div>
+      <div class="perfil-corpo">
+        <div class="perfil-categoria">Luxo Ativo</div>
+        <div class="perfil-nome">Gastronomia + Náutica & Aventura</div>
+        <div class="perfil-apelido">"O Rio do sabor e do mar"</div>
+        <button class="btn-em-breve">Conteúdo em construção</button>
+      </div>
+    </div>
+
+    <!-- CARD: ARTE & CULTURA (placeholder — em breve) -->
+    <div class="perfil-card indisponivel">
+      <div class="midia-slot">
+        <div class="midia-placeholder">
+          <div class="midia-placeholder-icone">🎭</div>
+          <div>Em breve</div>
+        </div>
+      </div>
+      <div class="perfil-corpo">
+        <div class="perfil-categoria">Luxo com História</div>
+        <div class="perfil-nome">Arte, História & Alma Carioca</div>
+        <div class="perfil-apelido">"O Rio dos cariocas"</div>
+        <button class="btn-em-breve">Conteúdo em construção</button>
+      </div>
+    </div>
+
+    <div class="alerta-selecao" id="alertaSelecaoPerfil">Escolha pelo menos uma experiência para continuar.</div>
+
+    <div class="nav-botoes">
+      <button class="btn-primario" onclick="validarStep1()">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ============ STEP 2 — DIAS DO ROTEIRO (Natureza) ============ -->
+  <div class="step" id="step2">
+    <div class="step-header">
+      <div class="step-num">Passo 2 de 4</div>
+      <div class="step-titulo">Natureza Exclusiva + Cultura</div>
+      <div class="step-desc">Toque em cada dia para ver os detalhes.</div>
+    </div>
+
+    <div class="dia-card" data-dia="1">
+      <div class="dia-cabecalho" onclick="toggleDia(this)">
+        <div class="dia-numero">01</div>
+        <div class="dia-titulos">
+          <div class="dia-nome">Chegada</div>
+          <div class="dia-resumo">Recepção privada, check-in e primeira noite carioca</div>
+        </div>
+        <div class="dia-seta">▼</div>
+      </div>
+      <div class="dia-detalhe">
+        <ul class="dia-lista">
+          <li>Recepção privada no aeroporto, com assistência bilíngue e traslado exclusivo</li>
+          <li>Tarde livre para descansar e caminhar por Copacabana, Ipanema ou Leblon</li>
+          <li>Jantar de boas-vindas em um botequim premiado</li>
+        </ul>
+        <div class="toque-cr">
+          <div class="toque-cr-label">✦ Toque CR</div>
+          <div class="toque-cr-texto">A primeira refeição é escolhida a dedo por Igor, para já apresentar o verdadeiro espírito carioca.</div>
+        </div>
+        <div class="midia-slot-mini" id="midiaSlot_dia1">
+          <div class="midia-placeholder"><div class="midia-placeholder-icone">📍</div><div>Foto do momento</div></div>
+          <div class="midia-botoes">
+            <button class="midia-btn" onclick="abrirLinkFoto('dia1')">📷</button>
+            <button class="midia-btn" onclick="abrirLinkVideo('dia1')">🎬</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dia-card" data-dia="2">
+      <div class="dia-cabecalho" onclick="toggleDia(this)">
+        <div class="dia-numero">02</div>
+        <div class="dia-titulos">
+          <div class="dia-nome">Selva & Mirantes</div>
+          <div class="dia-resumo">Floresta da Tijuca e vistas exclusivas</div>
+        </div>
+        <div class="dia-seta">▼</div>
+      </div>
+      <div class="dia-detalhe">
+        <ul class="dia-lista">
+          <li>Floresta da Tijuca: a maior floresta tropical urbana do mundo, com trilha privada guiada</li>
+          <li>Vista Chinesa e mirantes exclusivos, sem aglomerações</li>
+          <li>Almoço em meio ao verde. Tarde de descanso</li>
+        </ul>
+        <div class="midia-slot-mini" id="midiaSlot_dia2">
+          <div class="midia-placeholder"><div class="midia-placeholder-icone">📍</div><div>Foto do momento</div></div>
+          <div class="midia-botoes">
+            <button class="midia-btn" onclick="abrirLinkFoto('dia2')">📷</button>
+            <button class="midia-btn" onclick="abrirLinkVideo('dia2')">🎬</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dia-card" data-dia="3">
+      <div class="dia-cabecalho" onclick="toggleDia(this)">
+        <div class="dia-numero">03</div>
+        <div class="dia-titulos">
+          <div class="dia-nome">Cristo ao Nascer do Sol</div>
+          <div class="dia-resumo">Sem filas, com a melhor luz do dia</div>
+        </div>
+        <div class="dia-seta">▼</div>
+      </div>
+      <div class="dia-detalhe">
+        <ul class="dia-lista">
+          <li>Cristo Redentor no primeiro horário (8h), praticamente vazio e com luz perfeita</li>
+          <li>Descida com parada no Mirante Dona Marta</li>
+          <li>Jardim Botânico à tarde: mais de 8 mil espécies</li>
+          <li>Jantar de gastronomia brasileira contemporânea</li>
+        </ul>
+        <div class="toque-cr">
+          <div class="toque-cr-label">✦ Toque CR</div>
+          <div class="toque-cr-texto">A história do Cristo é contada com calma, aos pés da estátua, sem pressa e sem multidão.</div>
+        </div>
+        <div class="midia-slot-mini" id="midiaSlot_dia3">
+          <div class="midia-placeholder"><div class="midia-placeholder-icone">📍</div><div>Foto do momento</div></div>
+          <div class="midia-botoes">
+            <button class="midia-btn" onclick="abrirLinkFoto('dia3')">📷</button>
+            <button class="midia-btn" onclick="abrirLinkVideo('dia3')">🎬</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dia-card" data-dia="4">
+      <div class="dia-cabecalho" onclick="toggleDia(this)">
+        <div class="dia-numero">04</div>
+        <div class="dia-titulos">
+          <div class="dia-nome">Mar & Pôr do Sol nas Alturas</div>
+          <div class="dia-resumo">Praia e Pedra Bonita ao entardecer</div>
+        </div>
+        <div class="dia-seta">▼</div>
+      </div>
+      <div class="dia-detalhe">
+        <ul class="dia-lista">
+          <li>Manhã de praia com serviço completo: toalhas, guarda-sol, água de coco</li>
+          <li>Tarde: Pedra Bonita, caminhada leve de 40 min até um dos mirantes mais espetaculares do Rio</li>
+          <li>Alternativa sem caminhada: pôr do sol em mirante panorâmico, de carro</li>
+        </ul>
+        <div class="midia-slot-mini" id="midiaSlot_dia4">
+          <div class="midia-placeholder"><div class="midia-placeholder-icone">📍</div><div>Foto do momento</div></div>
+          <div class="midia-botoes">
+            <button class="midia-btn" onclick="abrirLinkFoto('dia4')">📷</button>
+            <button class="midia-btn" onclick="abrirLinkVideo('dia4')">🎬</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dia-card" data-dia="5">
+      <div class="dia-cabecalho" onclick="toggleDia(this)">
+        <div class="dia-numero">05</div>
+        <div class="dia-titulos">
+          <div class="dia-nome">Saída</div>
+          <div class="dia-resumo">Últimas compras e traslado ao aeroporto</div>
+        </div>
+        <div class="dia-seta">▼</div>
+      </div>
+      <div class="dia-detalhe">
+        <ul class="dia-lista">
+          <li>Manhã livre para fotos e compras com assessoria pessoal</li>
+          <li>Check-out assistido e traslado privado ao aeroporto</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="nav-botoes">
+      <button class="btn-secundario" onclick="mostrarStep(1)">← Voltar</button>
+      <button class="btn-primario" onclick="mostrarStep(3)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ============ STEP 3 — EXTENSÕES ============ -->
+  <div class="step" id="step3">
+    <div class="step-header">
+      <div class="step-num">Passo 3 de 4</div>
+      <div class="step-titulo">Quer estender a viagem?</div>
+      <div class="step-desc">Opcional — toque para adicionar ou remover.</div>
+    </div>
+
+    <div class="chip-card" data-ext="petropolis">
+      <div class="chip-topo" onclick="toggleExtensao(this)">
+        <div class="chip-info">
+          <div class="chip-nome">Petrópolis Imperial</div>
+          <div class="chip-desc">Dia completo · a cidade imperial na serra, a 1h do Rio</div>
+        </div>
+        <div class="chip-check"><svg width="12" height="9" viewBox="0 0 12 9"><polyline points="1,5 4,8 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+      </div>
+      <div class="carrossel" id="carrossel_ext_petropolis" data-carrossel="ext_petropolis"></div>
+      <div id="videoSlot_ext_petropolis" style="padding:10px 14px 0;"></div>
+      <div class="chip-detalhes-toggle"><button onclick="toggleDetalhesExt('petropolis', this)">Ver detalhes ▾</button></div>
+      <div class="chip-detalhes" id="detalhesExt_petropolis">
+        <p>Transporte executivo privado pela serra, visita ao Museu Imperial (palácio de verão de Dom Pedro II), almoço selecionado e tarde livre no centro histórico.</p><br>
+        <p><strong>✦ Toque CR:</strong> uma caixa de chocolates artesanais da região, com um cartão contando como um imperador tropical construiu um pedaço da Europa no Brasil.</p>
+      </div>
+    </div>
+
+    <div class="chip-card" data-ext="buzios">
+      <div class="chip-topo" onclick="toggleExtensao(this)">
+        <div class="chip-info">
+          <div class="chip-nome">Arraial do Cabo & Búzios</div>
+          <div class="chip-desc">3 dias / 2 noites · praias paradisíacas e charme</div>
+        </div>
+        <div class="chip-check"><svg width="12" height="9" viewBox="0 0 12 9"><polyline points="1,5 4,8 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+      </div>
+      <div class="carrossel" id="carrossel_ext_buzios" data-carrossel="ext_buzios"></div>
+      <div id="videoSlot_ext_buzios" style="padding:10px 14px 0;"></div>
+      <div class="chip-detalhes-toggle"><button onclick="toggleDetalhesExt('buzios', this)">Ver detalhes ▾</button></div>
+      <div class="chip-detalhes" id="detalhesExt_buzios">
+        <p>Passeio de barco por Arraial do Cabo (águas turquesa, o "Caribe brasileiro"), duas noites em hotel boutique em Búzios, com tempo livre nas praias e na Rua das Pedras.</p><br>
+        <p><strong>✦ Toque CR:</strong> um espumante brasileiro na Orla Bardot ao pôr do sol, com a história de Brigitte Bardot contada por Igor.</p>
+      </div>
+    </div>
+
+    <div class="chip-card" data-ext="paraty">
+      <div class="chip-topo" onclick="toggleExtensao(this)">
+        <div class="chip-info">
+          <div class="chip-nome">Angra dos Reis & Paraty</div>
+          <div class="chip-desc">2 dias / 1 noite · ilhas, lancha e cidade histórica</div>
+        </div>
+        <div class="chip-check"><svg width="12" height="9" viewBox="0 0 12 9"><polyline points="1,5 4,8 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+      </div>
+      <div class="carrossel" id="carrossel_ext_paraty" data-carrossel="ext_paraty"></div>
+      <div id="videoSlot_ext_paraty" style="padding:10px 14px 0;"></div>
+      <div class="chip-detalhes-toggle"><button onclick="toggleDetalhesExt('paraty', this)">Ver detalhes ▾</button></div>
+      <div class="chip-detalhes" id="detalhesExt_paraty">
+        <p>Lancha privada entre as ilhas de Angra dos Reis, com paradas para nadar, e uma noite em pousada boutique no centro histórico colonial de Paraty.</p><br>
+        <p><strong>✦ Toque CR:</strong> um brinde de cachaça de alambique local após a caminhada noturna por Paraty, unindo Brasil e México através do agave e da cana.</p>
+      </div>
+    </div>
+
+    <div class="oper-toggle">
+      <button onclick="toggleOperacional()">O que preciso saber ▾</button>
+    </div>
+    <div class="oper-caixa" id="operCaixa">
+      <p><strong>Tarifas:</strong> valores enviados separadamente conforme número de pessoas, datas e hotéis escolhidos.</p><br>
+      <p><strong>Hospedagem:</strong> hotéis sugeridos são recomendações de perfil.</p><br>
+      <p><strong>Modularidade:</strong> tudo é combinável — nada fica fixo até a confirmação.</p><br>
+      <p><strong>Contato:</strong> Igor Rosa · CR Turismo. Resposta em até 4h em dias úteis.</p>
+    </div>
+
+    <div class="nav-botoes">
+      <button class="btn-secundario" onclick="mostrarStep(2)">← Voltar</button>
+      <button class="btn-primario" onclick="montarResumo(); mostrarStep(4)">Ver meu roteiro →</button>
+    </div>
+  </div>
+
+  <!-- ============ STEP 4 — RESUMO FINAL ============ -->
+  <div class="step" id="step4">
+    <div id="resumoConteudo"></div>
+    <div class="nav-botoes" style="flex-direction:column;">
+      <button class="btn-primario" onclick="enviarResumo()">Enviar meu roteiro →</button>
+      <button class="btn-secundario" onclick="mostrarStep(3)" style="margin-top:10px;">← Ajustar escolhas</button>
+    </div>
+  </div>
+
+</div>
+</div><!-- fim #areaConfigurador -->
+
+<script>
+/* ============================================================
+   LIGHTBOX — foto ampliada em tela cheia, com zoom por pinça
+   (gesto de dois dedos) e arraste quando ampliada.
+   ============================================================ */
+(function(){
+  var lightbox = document.getElementById('lightbox');
+  var img = document.getElementById('lightboxImg');
+  var escala = 1, deslocX = 0, deslocY = 0;
+  var distanciaInicial = 0, escalaInicial = 1;
+  var arrastando = false, arrasteInicioX = 0, arrasteInicioY = 0;
+
+  function aplicarTransform(){
+    img.style.transform = 'translate(' + deslocX + 'px,' + deslocY + 'px) scale(' + escala + ')';
+  }
+
+  function distanciaEntreToques(toques){
+    var dx = toques[0].clientX - toques[1].clientX;
+    var dy = toques[0].clientY - toques[1].clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+
+  window.abrirLightbox = function(url){
+    if(!url) return;
+    img.src = url;
+    escala = 1; deslocX = 0; deslocY = 0;
+    aplicarTransform();
+    lightbox.classList.add('ativo');
+  };
+
+  window.fecharLightbox = function(){
+    lightbox.classList.remove('ativo');
+  };
+
+  lightbox.addEventListener('click', function(e){
+    if(e.target === lightbox){ fecharLightbox(); }
+  });
+
+  img.addEventListener('touchstart', function(e){
+    if(e.touches.length === 2){
+      distanciaInicial = distanciaEntreToques(e.touches);
+      escalaInicial = escala;
+    } else if(e.touches.length === 1 && escala > 1){
+      arrastando = true;
+      arrasteInicioX = e.touches[0].clientX - deslocX;
+      arrasteInicioY = e.touches[0].clientY - deslocY;
+    }
+  }, {passive:true});
+
+  img.addEventListener('touchmove', function(e){
+    if(e.touches.length === 2){
+      e.preventDefault();
+      var novaDistancia = distanciaEntreToques(e.touches);
+      escala = Math.min(Math.max(escalaInicial * (novaDistancia / distanciaInicial), 1), 4);
+      aplicarTransform();
+    } else if(e.touches.length === 1 && arrastando){
+      e.preventDefault();
+      deslocX = e.touches[0].clientX - arrasteInicioX;
+      deslocY = e.touches[0].clientY - arrasteInicioY;
+      aplicarTransform();
+    }
+  }, {passive:false});
+
+  img.addEventListener('touchend', function(e){
+    arrastando = false;
+    if(escala <= 1.02){ escala = 1; deslocX = 0; deslocY = 0; aplicarTransform(); }
+  });
+
+  // Duplo toque para alternar zoom (atalho, além da pinça)
+  var ultimoToque = 0;
+  img.addEventListener('touchend', function(){
+    var agora = Date.now();
+    if(agora - ultimoToque < 300){
+      if(escala > 1){ escala = 1; deslocX = 0; deslocY = 0; }
+      else { escala = 2; }
+      aplicarTransform();
+    }
+    ultimoToque = agora;
+  });
+})();
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+var STEP_ATUAL = 0;
+var TOTAL_STEPS = 4;
+var MAIOR_STEP_VISITADO = 1;
+var perfisSelecionados = [];
+var extensoesSelecionadas = [];
+var midias = {}; // { id: {foto:'url', video:'url'} }
+
+var DIAS_NATUREZA = [
+  {n:'01', nome:'Chegada', resumo:'Recepção privada, check-in e primeira noite carioca', midia:'dia1',
+    itens:['Recepção privada no aeroporto, com assistência bilíngue e traslado exclusivo','Tarde livre para descansar e caminhar por Copacabana, Ipanema ou Leblon','Jantar de boas-vindas em um botequim premiado'],
+    toqueCR:'A primeira refeição é escolhida a dedo por Igor, para já apresentar o verdadeiro espírito carioca.'},
+  {n:'02', nome:'Selva & Mirantes', resumo:'Floresta da Tijuca e vistas exclusivas', midia:'dia2',
+    itens:['Floresta da Tijuca: a maior floresta tropical urbana do mundo, com trilha privada guiada','Vista Chinesa e mirantes exclusivos, sem aglomerações','Almoço em meio ao verde. Tarde de descanso'],
+    toqueCR:null},
+  {n:'03', nome:'Cristo ao Nascer do Sol', resumo:'Sem filas, com a melhor luz do dia', midia:'dia3',
+    itens:['Cristo Redentor no primeiro horário (8h), praticamente vazio e com luz perfeita','Descida com parada no Mirante Dona Marta','Jardim Botânico à tarde: mais de 8 mil espécies','Jantar de gastronomia brasileira contemporânea'],
+    toqueCR:'A história do Cristo é contada com calma, aos pés da estátua, sem pressa e sem multidão.'},
+  {n:'04', nome:'Mar & Pôr do Sol nas Alturas', resumo:'Praia e Pedra Bonita ao entardecer', midia:'dia4',
+    itens:['Manhã de praia com serviço completo: toalhas, guarda-sol, água de coco','Tarde: Pedra Bonita, caminhada leve de 40 min até um dos mirantes mais espetaculares do Rio','Alternativa sem caminhada: pôr do sol em mirante panorâmico, de carro'],
+    toqueCR:null},
+  {n:'05', nome:'Saída', resumo:'Últimas compras e traslado ao aeroporto', midia:null,
+    itens:['Manhã livre para fotos e compras com assessoria pessoal','Check-out assistido e traslado privado ao aeroporto'],
+    toqueCR:null}
+];
+
+// Dados completos dos perfis, usados para montar a jornada do Igor.
+var PERFIS_INFO = {
+  natureza: {
+    categoria:'Luxo Silencioso', nome:'Natureza Exclusiva + Cultura', apelido:'"O Rio que respira"',
+    descricao:'Perfil ideal: famílias ativas e casais que querem mais do que cartão-postal. Para quem já conhece o Caribe e a Europa, e busca algo autêntico, em plena natureza urbana, guiado por alguém que entende sua cultura.<br><br>Em cinco dias, sua família vai viver o Rio de verdade: a maior selva urbana do mundo, mirantes que só quem conhece o caminho alcança, e o Cristo Redentor recém-aberto — quase vazio, com a primeira luz da manhã, sem filas e sem multidões.',
+    hotel:'Emiliano Copacabana ou Fairmont Rio', midiaKey:'natureza_capa', dias: DIAS_NATUREZA
+  },
+  gastronomia: {
+    categoria:'Luxo Ativo', nome:'Gastronomia + Náutica & Aventura', apelido:'"O Rio do sabor e do mar"',
+    descricao:'Conteúdo completo em construção — este perfil ainda não tem os dias detalhados cadastrados.',
+    hotel:'A definir', midiaKey:'gastronomia_capa', dias: []
+  },
+  cultura: {
+    categoria:'Luxo com História', nome:'Arte, História & Alma Carioca', apelido:'"O Rio dos cariocas"',
+    descricao:'Conteúdo completo em construção — este perfil ainda não tem os dias detalhados cadastrados.',
+    hotel:'A definir', midiaKey:'cultura_capa', dias: []
+  }
+};
+
+var EXTENSOES_INFO = {
+  petropolis:{nome:'Petrópolis Imperial', desc:'Dia completo na cidade imperial', midiaKey:'ext_petropolis',
+    texto:'Transporte executivo privado pela serra, visita ao Museu Imperial (palácio de verão de Dom Pedro II), almoço selecionado e tarde livre no centro histórico.',
+    toqueCR:'Uma caixa de chocolates artesanais da região, com um cartão contando como um imperador tropical construiu um pedaço da Europa no Brasil.'},
+  buzios:{nome:'Arraial do Cabo & Búzios', desc:'3 dias / 2 noites de praia e charme', midiaKey:'ext_buzios',
+    texto:'Passeio de barco por Arraial do Cabo (águas turquesa, o "Caribe brasileiro"), duas noites em hotel boutique em Búzios, com tempo livre nas praias e na Rua das Pedras.',
+    toqueCR:'Um espumante brasileiro na Orla Bardot ao pôr do sol, com a história de Brigitte Bardot contada por Igor.'},
+  paraty:{nome:'Angra dos Reis & Paraty', desc:'2 dias / 1 noite entre ilhas e história', midiaKey:'ext_paraty',
+    texto:'Lancha privada entre as ilhas de Angra dos Reis, com paradas para nadar, e uma noite em pousada boutique no centro histórico colonial de Paraty.',
+    toqueCR:'Um brinde de cachaça de alambique local após a caminhada noturna por Paraty, unindo Brasil e México através do agave e da cana.'}
+};
+
+// ⚠️ Senha fixa da equipe (área do Igor) — troque como quiser.
+var SENHA_EQUIPE = '123';
+
+window.addEventListener('DOMContentLoaded', function(){
+  var idJornada = new URLSearchParams(window.location.search).get('id');
+  if(idJornada){
+    iniciarAreaDoIgor(idJornada);
+  } else {
+    inicializarTodosCarrosseis();
+  }
+});
+
+/* ============================================================
+   NAVEGAÇÃO ENTRE STEPS  (corrigido: sempre permite ir para
+   qualquer step já visitado, tanto pela barra quanto pelos botões)
+   ============================================================ */
+function mostrarStep(n){
+  if(n===0){
+    document.getElementById('telaInicial').classList.remove('hidden');
+    document.getElementById('headerTopo').classList.add('hidden');
+    document.querySelectorAll('.step').forEach(function(s){s.classList.remove('ativo');});
+    window.scrollTo(0,0);
+    return;
+  }
+  document.getElementById('telaInicial').classList.add('hidden');
+  document.getElementById('headerTopo').classList.remove('hidden');
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('ativo');});
+  document.getElementById('step'+n).classList.add('ativo');
+  STEP_ATUAL = n;
+  if(n > MAIOR_STEP_VISITADO) MAIOR_STEP_VISITADO = n;
+  atualizarProgresso();
+  window.scrollTo(0,0);
+}
+
+function atualizarProgresso(){
+  var wrap = document.getElementById('progressSteps');
+  wrap.innerHTML = '';
+  for(var i=1;i<=TOTAL_STEPS;i++){
+    var dot = document.createElement('div');
+    var classes = 'step-dot';
+    if(i===STEP_ATUAL) classes += ' ativo';
+    else if(i<=MAIOR_STEP_VISITADO) classes += ' visitado';
+    dot.className = classes;
+    if(i<=MAIOR_STEP_VISITADO){
+      dot.onclick = (function(idx){ return function(){ mostrarStep(idx); }; })(i);
+    }
+    wrap.appendChild(dot);
+  }
+  document.getElementById('progressLabel').textContent = STEP_ATUAL+'/'+TOTAL_STEPS;
+}
+
+/* ============================================================
+   STEP 1 — PERFIL
+   ============================================================ */
+function toggleDescricao(key, btn){
+  var el = document.getElementById('descricao_'+key);
+  el.classList.toggle('aberta');
+  btn.textContent = el.classList.contains('aberta') ? 'Fechar descrição ▴' : 'Ler descrição completa ▾';
+}
+
+function togglePerfil(key){
+  var idx = perfisSelecionados.indexOf(key);
+  var btn = document.getElementById('btnPerfil_'+key);
+  var card = document.getElementById('perfilCard_'+key);
+  if(idx>-1){
+    perfisSelecionados.splice(idx,1);
+    btn.classList.remove('marcado');
+    card.classList.remove('selecionado');
+    btn.querySelector('span:last-child').textContent = 'Escolher esta experiência';
+  } else {
+    perfisSelecionados.push(key);
+    btn.classList.add('marcado');
+    card.classList.add('selecionado');
+    btn.querySelector('span:last-child').textContent = 'Selecionado';
+  }
+  document.getElementById('alertaSelecaoPerfil').classList.remove('visivel');
+}
+
+function validarStep1(){
+  if(perfisSelecionados.length===0){
+    document.getElementById('alertaSelecaoPerfil').classList.add('visivel');
+    return;
+  }
+  mostrarStep(2);
+}
+
+/* ============================================================
+   STEP 2 — DIAS EXPANSÍVEIS
+   ============================================================ */
+function toggleDia(header){
+  var card = header.parentElement;
+  card.classList.toggle('aberto');
+}
+
+/* ============================================================
+   STEP 3 — EXTENSÕES (chips) + detalhes + camada operacional
+   ============================================================ */
+function toggleExtensao(topoEl){
+  var card = topoEl.parentElement;
+  var key = card.getAttribute('data-ext');
+  var idx = extensoesSelecionadas.indexOf(key);
+  if(idx>-1){
+    extensoesSelecionadas.splice(idx,1);
+    card.classList.remove('marcado');
+  } else {
+    extensoesSelecionadas.push(key);
+    card.classList.add('marcado');
+  }
+}
+
+function toggleDetalhesExt(key, btn){
+  var el = document.getElementById('detalhesExt_'+key);
+  el.classList.toggle('aberto');
+  btn.textContent = el.classList.contains('aberto') ? 'Fechar detalhes ▴' : 'Ver detalhes ▾';
+}
+
+function toggleOperacional(){
+  document.getElementById('operCaixa').classList.toggle('ativo');
+}
+
+/* ============================================================
+   CARROSSEL DE FOTOS (5 posições) + VÍDEO — usado nos 3 perfis
+   e nas 3 extensões, tanto aqui quanto na jornada. Cada carrossel
+   é identificado por uma "chave" (ex: 'natureza_capa', 'ext_petropolis').
+   ============================================================ */
+var NUM_FOTOS_CARROSSEL = 5;
+
+function renderizarCarrossel(chave){
+  var container = document.getElementById('carrossel_' + chave);
+  if(!container) return;
+  var dadosMidia = midias[chave] || {};
+  var fotos = dadosMidia.fotos || [];
+
+  var html = '<div class="carrossel-trilho" id="trilho_' + chave + '">';
+  for(var i = 0; i < NUM_FOTOS_CARROSSEL; i++){
+    var url = fotos[i];
+    html += '<div class="carrossel-slide">';
+    if(url){
+      html += '<img src="' + url + '" onclick="abrirLightbox(\'' + url.replace(/'/g,"\\'") + '\')">';
+    } else {
+      html += '<div class="carrossel-placeholder"><div class="carrossel-placeholder-icone">📷</div><div>Foto ' + (i+1) + '</div>'
+        + '<button class="carrossel-add-btn" onclick="abrirLinkFotoCarrossel(\'' + chave + '\', ' + i + ')">+ Adicionar</button></div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="carrossel-dots">';
+  for(var j = 0; j < NUM_FOTOS_CARROSSEL; j++){
+    html += '<div class="carrossel-dot' + (j===0?' ativo':'') + '"></div>';
+  }
+  html += '</div>';
+  html += '<div class="carrossel-dica">arraste para o lado · toque para ampliar</div>';
+
+  container.innerHTML = html;
+
+  // Atualiza os dots conforme o scroll do trilho
+  var trilho = document.getElementById('trilho_' + chave);
+  trilho.addEventListener('scroll', function(){
+    var idx = Math.round(trilho.scrollLeft / trilho.clientWidth);
+    var dots = container.querySelectorAll('.carrossel-dot');
+    dots.forEach(function(d, i){ d.classList.toggle('ativo', i === idx); });
+  });
+
+  renderizarBotaoVideo(chave);
+}
+
+function renderizarBotaoVideo(chave){
+  var slot = document.getElementById('videoSlot_' + chave);
+  if(!slot) return;
+  var dadosMidia = midias[chave] || {};
+  if(dadosMidia.video){
+    slot.innerHTML = '<a class="video-btn-separado" href="' + dadosMidia.video + '" target="_blank">▶ Assistir vídeo</a>'
+      + ' <button class="video-btn-separado" style="background:transparent;color:var(--cinza-med);border:1px solid var(--borda);" onclick="abrirLinkVideoCarrossel(\'' + chave + '\')">trocar</button>';
+  } else {
+    slot.innerHTML = '<button class="video-btn-separado" onclick="abrirLinkVideoCarrossel(\'' + chave + '\')">🎬 Adicionar vídeo</button>';
+  }
+}
+
+function abrirLinkFotoCarrossel(chave, indice){
+  var url = prompt('Cole aqui o link da foto ' + (indice+1) + ':');
+  if(!url) return;
+  midias[chave] = midias[chave] || {};
+  midias[chave].fotos = midias[chave].fotos || [];
+  midias[chave].fotos[indice] = url;
+  renderizarCarrossel(chave);
+}
+
+function abrirLinkVideoCarrossel(chave){
+  var url = prompt('Cole aqui o link do vídeo:');
+  if(!url) return;
+  midias[chave] = midias[chave] || {};
+  midias[chave].video = url;
+  renderizarCarrossel(chave);
+}
+
+function inicializarTodosCarrosseis(){
+  document.querySelectorAll('[data-carrossel]').forEach(function(el){
+    renderizarCarrossel(el.getAttribute('data-carrossel'));
+  });
+}
+
+/* ============================================================
+   MÍDIA — placeholder de foto/vídeo simples (dias individuais,
+   que continuam com 1 foto só, sem carrossel)
+   ============================================================ */
+function abrirLinkFoto(id){
+  var url = prompt('Cole aqui o link da foto:');
+  if(!url) return;
+  midias[id] = midias[id] || {};
+  midias[id].foto = url;
+  aplicarMidiaNoSlot(id);
+}
+function abrirLinkVideo(id){
+  var url = prompt('Cole aqui o link do vídeo:');
+  if(!url) return;
+  midias[id] = midias[id] || {};
+  midias[id].video = url;
+  aplicarMidiaNoSlot(id);
+}
+function aplicarMidiaNoSlot(id){
+  var slot = document.getElementById('midiaSlot_'+id) || document.getElementById('midiaSlot_'+id+'_capa');
+  if(!slot) return;
+  var m = midias[id];
+  if(m.foto){
+    var placeholder = slot.querySelector('.midia-placeholder');
+    if(placeholder) placeholder.style.display='none';
+    var img = slot.querySelector('img');
+    if(!img){
+      img = document.createElement('img');
+      slot.insertBefore(img, slot.firstChild);
+    }
+    img.src = m.foto;
+  }
+  if(m.video){
+    var tag = document.getElementById('videoTag_'+id);
+    if(tag){
+      tag.href = m.video;
+      tag.classList.add('ativo');
+    }
+  }
+}
+
+/* ============================================================
+   STEP 4 — MONTAR RESUMO (tela dentro do app)
+   ============================================================ */
+function montarResumo(){
+  var html = '';
+  html += '<div class="resumo-topo">';
+  html += '<div class="resumo-topo-sub">Seu roteiro dos sonhos</div>';
+  html += '<div class="resumo-topo-titulo">Rio de Janeiro<br><span style="font-size:15px;">CR Turismo</span></div>';
+  html += '<div class="resumo-topo-linha"></div></div>';
+
+  perfisSelecionados.forEach(function(key){
+    if(key==='natureza'){
+      html += '<div class="resumo-secao"><div class="resumo-secao-header">Experiência escolhida</div>';
+      html += '<div class="resumo-perfil-nome">Natureza Exclusiva + Cultura</div>';
+      if(midias['natureza_capa'] && midias['natureza_capa'].foto){
+        html += '<img class="resumo-thumb" src="'+midias['natureza_capa'].foto+'">';
+      }
+      DIAS_NATUREZA.forEach(function(d){
+        html += '<div class="resumo-dia">';
+        html += '<div class="resumo-dia-nome">Dia '+d.n+' — '+d.nome+'</div>';
+        html += '<div class="resumo-dia-texto">'+d.resumo+'</div>';
+        if(d.midia && midias[d.midia] && midias[d.midia].foto){
+          html += '<img class="resumo-thumb" src="'+midias[d.midia].foto+'">';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+  });
+
+  if(extensoesSelecionadas.length>0){
+    html += '<div class="resumo-secao"><div class="resumo-secao-header">Extensões escolhidas</div>';
+    extensoesSelecionadas.forEach(function(key){
+      var e = EXTENSOES_INFO[key];
+      html += '<div class="resumo-extensao-item">'+e.nome+' — '+e.desc+'</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="resumo-secao"><div class="resumo-secao-header">Próximo passo</div>';
+  html += '<div class="resumo-dia-texto">Envie este roteiro para o Igor e receba sua cotação personalizada.</div></div>';
+
+  html += '<div class="resumo-rodape"><div class="resumo-rodape-texto">CR Turismo · Travel Solutions<br>Rio de Janeiro, Brasil</div></div>';
+
+  document.getElementById('resumoConteudo').innerHTML = html;
+}
+
+/* ============================================================
+   SALVAR ROTEIRO NA "GAVETA" — em vez de colocar tudo na URL,
+   os dados completos (perfis, extensões, fotos, vídeos) são
+   enviados para a Netlify Function, que devolve um código curto
+   (id). Só esse código viaja no link compartilhado, então o
+   link nunca fica grande, mesmo com muitas fotos.
+   ============================================================ */
+async function salvarRoteiroEGerarLink(){
+  var dados = {
+    perfis: perfisSelecionados,
+    extensoes: extensoesSelecionadas,
+    midias: midias
+  };
+  try{
+    var resposta = await fetch('/.netlify/functions/salvar-roteiro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+    var resultado = await resposta.json();
+    if(resultado.id){
+      return window.location.origin + window.location.pathname + '?id=' + resultado.id;
+    }
+  } catch(e){
+    console.error('Não foi possível salvar o roteiro:', e);
+  }
+  return null; // Falhou — o resumo básico segue sem o link.
+}
+
+/* ============================================================
+   ENVIO — gera um HTML completo (documento independente, com o
+   mesmo padrão visual do app) e aciona o compartilhamento nativo
+   do aparelho, igual ao mecanismo da ficha de inscrição.
+   ============================================================ */
+function gerarHtmlResumo(linkJornada){
+  var css = ''
+    +'*{box-sizing:border-box;margin:0;padding:0;}'
+    +'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#FDF8EE;color:#1A1A1A;-webkit-font-smoothing:antialiased;}'
+    +'.doc-topo{background:#1A2E4A;padding:28px 20px 24px;text-align:center;}'
+    +'.doc-topo-sub{font-size:11px;color:rgba(201,168,76,0.55);letter-spacing:.15em;text-transform:uppercase;margin-bottom:7px;}'
+    +'.doc-topo-titulo{font-family:Georgia,"Times New Roman",serif;font-size:22px;color:#DFC078;font-weight:700;letter-spacing:.03em;line-height:1.3;}'
+    +'.doc-topo-linha{width:40px;height:2px;background:linear-gradient(90deg,transparent,#C9A84C,transparent);margin:14px auto 0;}'
+    +'.doc-secao{padding:18px 20px;border-bottom:1px solid #D6C99A;background:#fff;}'
+    +'.doc-secao-header{background:#1A2E4A;color:#fff;margin:-18px -20px 16px;padding:9px 20px;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;}'
+    +'.doc-perfil-nome{font-family:Georgia,"Times New Roman",serif;font-size:18px;font-weight:700;color:#1A2E4A;margin-bottom:10px;}'
+    +'.doc-thumb{width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:12px;}'
+    +'.doc-dia{margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed #D6C99A;}'
+    +'.doc-dia:last-child{border:none;margin:0;padding:0;}'
+    +'.doc-dia-nome{font-size:14.5px;font-weight:700;color:#1A2E4A;margin-bottom:4px;}'
+    +'.doc-dia-texto{font-size:13.5px;line-height:1.65;color:#3D3D3D;}'
+    +'.doc-extensao-item{font-size:14px;color:#3D3D3D;padding:8px 0;border-bottom:1px solid #D6C99A;}'
+    +'.doc-extensao-item:last-child{border:none;}'
+    +'.doc-rodape{background:#1A2E4A;padding:20px;text-align:center;}'
+    +'.doc-rodape-texto{font-size:11px;color:rgba(201,168,76,0.6);line-height:1.7;}';
+
+  var body = '<div class="doc-topo"><div class="doc-topo-sub">Seu roteiro dos sonhos</div>'
+    +'<div class="doc-topo-titulo">Rio de Janeiro<br><span style="font-size:16px;">CR Turismo</span></div>'
+    +'<div class="doc-topo-linha"></div></div>';
+
+  perfisSelecionados.forEach(function(key){
+    if(key==='natureza'){
+      body += '<div class="doc-secao"><div class="doc-secao-header">Experiência escolhida</div>';
+      body += '<div class="doc-perfil-nome">Natureza Exclusiva + Cultura</div>';
+      var capaFotos = midias['natureza_capa'] && midias['natureza_capa'].fotos;
+      if(capaFotos && capaFotos[0]){
+        body += '<img class="doc-thumb" src="'+capaFotos[0]+'">';
+      }
+      DIAS_NATUREZA.forEach(function(d){
+        body += '<div class="doc-dia">';
+        body += '<div class="doc-dia-nome">Dia '+d.n+' — '+d.nome+'</div>';
+        body += '<div class="doc-dia-texto">'+d.resumo+'</div>';
+        if(d.midia && midias[d.midia] && midias[d.midia].foto){
+          body += '<img class="doc-thumb" src="'+midias[d.midia].foto+'">';
+        }
+        body += '</div>';
+      });
+      body += '</div>';
+    }
+  });
+
+  if(extensoesSelecionadas.length>0){
+    body += '<div class="doc-secao"><div class="doc-secao-header">Extensões escolhidas</div>';
+    extensoesSelecionadas.forEach(function(key){
+      var e = EXTENSOES_INFO[key];
+      body += '<div class="doc-extensao-item"><strong>'+e.nome+'</strong> — '+e.desc+'</div>';
+    });
+    body += '</div>';
+  }
+
+  body += '<div class="doc-secao"><div class="doc-secao-header">Próximo passo</div>'
+    +'<div class="doc-dia-texto">Aguarde, em breve você recebe a sua jornada completa.</div>';
+  if(linkJornada){
+    body += '<a href="'+linkJornada+'" style="display:block;word-break:break-all;color:#1A2E4A;font-weight:700;background:#FBF4E3;border:1.5px solid #C9A84C;border-radius:10px;padding:12px 16px;font-size:12.5px;text-decoration:none;margin-top:10px;text-align:center;">Ver jornada completa →</a>';
+  }
+  body += '</div>';
+
+  body += '<div class="doc-rodape"><div class="doc-rodape-texto">CR Turismo · Travel Solutions<br>Rio de Janeiro, Brasil</div></div>';
+
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+    +'<title>Meu Roteiro — CR Turismo</title><style>'+css+'</style></head><body>'+body+'</body></html>';
+
+  return html;
+}
+
+async function enviarResumo(){
+  var btn = document.querySelector('#step4 .btn-primario');
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparando...'; }
+
+  var linkJornada = await salvarRoteiroEGerarLink();
+  var html = gerarHtmlResumo(linkJornada);
+
+  if(btn){ btn.disabled = false; btn.textContent = 'Enviar meu roteiro →'; }
+
+  var nomeArq = 'Meu_Roteiro_CR_Turismo.html';
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var file = new File([blob], nomeArq, {type:'text/html'});
+
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({
+      title:'Meu Roteiro — CR Turismo',
+      text:'Meu roteiro dos sonhos no Rio de Janeiro',
+      files:[file]
+    }).catch(function(){});
+  } else {
+    try{
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = nomeArq;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    }catch(e){
+      var w = window.open('','_blank');
+      if(w){ w.document.write(html); w.document.close(); }
+    }
+  }
+}
+
+/* ============================================================
+   ÁREA DO IGOR — ativada quando a URL tem ?id=...
+   Busca os dados salvos na "gaveta" (Netlify Function) e, após
+   a senha correta, monta a jornada completa somente-leitura.
+   ============================================================ */
+var dadosJornadaIgor = null;
+
+function iniciarAreaDoIgor(id){
+  // Esconde o configurador e a tela inicial; mostra a tela de senha.
+  document.getElementById('areaConfigurador').classList.add('hidden');
+  document.getElementById('telaInicial').classList.add('hidden');
+  document.getElementById('telaSenha').classList.remove('hidden');
+
+  document.getElementById('btnEntrarSenha').addEventListener('click', function(){
+    validarSenhaEBuscarJornada(id);
+  });
+  document.getElementById('senhaInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ validarSenhaEBuscarJornada(id); }
+  });
+}
+
+async function validarSenhaEBuscarJornada(id){
+  var senha = document.getElementById('senhaInput').value;
+  var erroEl = document.getElementById('senhaErro');
+  var carregandoEl = document.getElementById('senhaCarregando');
+
+  if(senha !== SENHA_EQUIPE){
+    erroEl.style.display = 'block';
+    return;
+  }
+  erroEl.style.display = 'none';
+  carregandoEl.style.display = 'block';
+
+  try{
+    var resposta = await fetch('/.netlify/functions/buscar-roteiro?id=' + encodeURIComponent(id));
+    if(!resposta.ok){
+      throw new Error('não encontrado');
+    }
+    var dados = await resposta.json();
+    dadosJornadaIgor = dados;
+    montarJornadaIgor(dados);
+    document.getElementById('telaSenha').classList.add('hidden');
+    document.getElementById('telaJornadaView').classList.add('ativa');
+    window.scrollTo(0,0);
+  } catch(e){
+    carregandoEl.style.display = 'none';
+    document.getElementById('telaSenha').classList.add('hidden');
+    document.getElementById('telaVazia').classList.remove('hidden');
+  }
+}
+
+function montarCarrosselSomenteLeitura(chave, dados, altura){
+  var m = (dados.midias && dados.midias[chave]) || {};
+  var fotos = m.fotos || [];
+  var html = '<div class="carrossel" style="height:'+(altura||170)+'px;">';
+  html += '<div class="carrossel-trilho">';
+  var temFoto = false;
+  fotos.forEach(function(url){
+    if(url){
+      temFoto = true;
+      html += '<div class="carrossel-slide"><img src="'+url+'" onclick="abrirLightbox(\''+url.replace(/'/g,"\\'")+'\')"></div>';
+    }
+  });
+  if(!temFoto){
+    html += '<div class="carrossel-slide"><div class="carrossel-placeholder"><div class="carrossel-placeholder-icone">📷</div><div>Sem fotos</div></div></div>';
+  }
+  html += '</div>';
+  if(temFoto && fotos.filter(function(f){return f;}).length > 1){
+    html += '<div class="carrossel-dica">arraste para o lado · toque para ampliar</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function montarBotaoVideoSomenteLeitura(chave, dados){
+  var m = (dados.midias && dados.midias[chave]) || {};
+  if(!m.video) return '';
+  return '<a class="video-btn-separado" href="'+m.video+'" target="_blank" style="margin-left:0;margin-bottom:10px;">▶ Assistir vídeo</a>';
+}
+
+function montarJornadaIgor(dados){
+  var html = '';
+  var perfis = dados.perfis || [];
+  var extensoes = dados.extensoes || [];
+
+  perfis.forEach(function(key){
+    var p = PERFIS_INFO[key];
+    if(!p) return;
+    html += '<div class="jn-perfil-card">';
+    html += montarCarrosselSomenteLeitura(p.midiaKey, dados, 170);
+    html += '<div class="jn-perfil-corpo">';
+    html += '<div class="perfil-categoria">'+p.categoria+'</div><br>';
+    html += montarBotaoVideoSomenteLeitura(p.midiaKey, dados);
+    html += '<div class="perfil-nome">'+p.nome+'</div>';
+    html += '<div class="perfil-apelido">'+p.apelido+'</div>';
+    html += '<button class="btn-ler-mais" onclick="toggleDescricaoIgor(this)">Ler descrição completa ▾</button>';
+    html += '<div class="descricao-completa">'+p.descricao+'</div>';
+    html += '<div class="jn-perfil-hotel"><strong>Hotel sugerido:</strong> '+p.hotel+'</div>';
+    html += '</div></div>';
+
+    p.dias.forEach(function(d){
+      html += '<div class="dia-card" data-dia="'+d.n+'">';
+      html += '<div class="dia-cabecalho" onclick="toggleDia(this)">';
+      html += '<div class="dia-numero">'+d.n+'</div>';
+      html += '<div class="dia-titulos"><div class="dia-nome">'+d.nome+'</div><div class="dia-resumo">'+d.resumo+'</div></div>';
+      html += '<div class="dia-seta">▼</div></div>';
+      html += '<div class="dia-detalhe"><ul class="dia-lista">';
+      d.itens.forEach(function(item){ html += '<li>'+item+'</li>'; });
+      html += '</ul>';
+      if(d.toqueCR){
+        html += '<div class="toque-cr"><div class="toque-cr-label">✦ Toque CR</div><div class="toque-cr-texto">'+d.toqueCR+'</div></div>';
+      }
+      if(d.midia){
+        var m = dados.midias && dados.midias[d.midia];
+        if(m && m.foto){ html += '<div class="midia-slot-mini" style="border:none;"><img src="'+m.foto+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" onclick="abrirLightbox(\''+m.foto.replace(/'/g,"\\'")+'\')"></div>'; }
+        if(m && m.video){ html += '<a href="'+m.video+'" target="_blank" class="video-btn-separado" style="margin-left:0;margin-top:8px;">▶ Ver vídeo</a>'; }
+      }
+      html += '</div></div>';
+    });
+  });
+
+  if(extensoes.length > 0){
+    html += '<div class="jn-secao-titulo">Extensões escolhidas</div>';
+    extensoes.forEach(function(key){
+      var e = EXTENSOES_INFO[key];
+      if(!e) return;
+      html += '<div class="jn-ext-card">';
+      html += montarCarrosselSomenteLeitura(e.midiaKey, dados, 150);
+      html += '<div style="padding:14px;">';
+      html += montarBotaoVideoSomenteLeitura(e.midiaKey, dados);
+      html += '<div class="ext-nome" style="font-size:15px;font-weight:700;color:var(--azul-af);margin-bottom:6px;">'+e.nome+'</div>';
+      html += '<button class="btn-ler-mais" onclick="toggleDescricaoIgor(this)">Ver detalhes ▾</button>';
+      html += '<div class="descricao-completa">'
+        + '<p>'+e.texto+'</p><br>'
+        + '<p><strong>✦ Toque CR:</strong> '+e.toqueCR+'</p>'
+        + '</div>';
+      html += '</div></div>';
+    });
+  }
+
+  html += '<div class="jn-rodape">CR Turismo · Travel Solutions<br>Rio de Janeiro, Brasil</div>';
+  html += '<div class="nav-botoes"><button class="btn-primario" id="btnReenviarIgor">Enviar jornada para o cliente →</button></div>';
+
+  document.getElementById('jornadaConteudoView').innerHTML = html;
+  document.getElementById('btnReenviarIgor').addEventListener('click', reenviarJornadaParaCliente);
+
+  // Ativa os carrosséis estáticos (sem edição) para o scroll/dots funcionarem
+  document.querySelectorAll('#jornadaConteudoView .carrossel').forEach(function(c){
+    var trilho = c.querySelector('.carrossel-trilho');
+    if(!trilho) return;
+    var dots = c.querySelectorAll('.carrossel-dot');
+    trilho.addEventListener('scroll', function(){
+      var idx = Math.round(trilho.scrollLeft / trilho.clientWidth);
+      dots.forEach(function(d,i){ d.classList.toggle('ativo', i===idx); });
+    });
+  });
+}
+
+function toggleDescricaoIgor(btn){
+  var el = btn.nextElementSibling;
+  el.classList.toggle('aberta');
+  var textoFechado = btn.textContent.indexOf('detalhes') > -1 ? 'Ver detalhes ▾' : 'Ler descrição completa ▾';
+  var textoAberto = btn.textContent.indexOf('detalhes') > -1 || btn.getAttribute('data-tipo')==='ext' ? 'Fechar detalhes ▴' : 'Fechar descrição ▴';
+  btn.textContent = el.classList.contains('aberta') ? textoAberto : textoFechado;
+}
+
+function reenviarJornadaParaCliente(){
+  var corpoAtual = document.getElementById('jornadaConteudoView').innerHTML;
+  var corpoLimpo = corpoAtual.replace(/<div class="nav-botoes">[\s\S]*?<\/div><\/div>/, '');
+  var estilos = document.querySelector('style').innerHTML;
+
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    + '<title>Sua Jornada — CR Turismo</title><style>' + estilos + '</style></head><body>'
+    + '<div class="jornada-topo"><div class="jornada-topo-sub">Sua jornada</div>'
+    + '<div class="jornada-topo-titulo">Rio de Janeiro<br><span style="font-size:16px;">CR Turismo</span></div>'
+    + '<div class="jornada-topo-linha"></div></div>'
+    + '<div class="container">' + corpoLimpo + '</div>'
+    + '</body></html>';
+
+  var nomeArq = 'Minha_Jornada_CR_Turismo.html';
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var file = new File([blob], nomeArq, {type:'text/html'});
+
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({title:'Sua Jornada — CR Turismo', files:[file]}).catch(function(){});
+  } else {
+    try{
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = nomeArq;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    }catch(e){
+      var w = window.open('','_blank');
+      if(w){ w.document.write(html); w.document.close(); }
+    }
+  }
+}
+</script>
+</body>
+</html>
